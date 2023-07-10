@@ -1,58 +1,108 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <!-- Load d3.js and necessary libraries -->
-    <script src="https://d3js.org/d3.v4.js"></script>
-    <script src="https://d3js.org/d3-scale-chromatic.v1.min.js"></script>
-    <script src="https://d3js.org/d3-geo-projection.v2.min.js"></script>
-    <meta charset="UTF-8">
-    <title>AirQo Maps</title>
-        <style>
-        /* Add any necessary CSS styles for the map */
-        #map-container {
-            width: 100%;
-            height: 500px;
-        }
-    </style>
-</head>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>AirQoMaps</title>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous" />
+    </head>
 
-<body>
-    <!-- Create an SVG container -->
-    <svg id="map-container" width="960" height="600"></svg>
+    <body>
+        <!-- <div class="border border-dark" style="width: 700px; height: 600px"> -->
+        <div class="border border-dark">
+            <svg width="700" height="600"></svg>
+        </div>
+        <div id="tooltip"></div>
 
-    {% block script %}
-    <script>
-    // Get the JSON data from Flask route
-    var jsonData = JSON.parse('{{ results|safe }}');
+        <script src="https://d3js.org/d3.v4.js"></script>
+        <script src="https://d3js.org/d3-geo-projection.v2.min.js"></script>
+        <script>
+            const width = innerWidth;
+            const height = innerHeight;
+            var svg = d3.select("svg").attr("width", width).attr("height", height);
 
-    // Create the SVG container
-    var svg = d3.select("#map-container")
-        .append("svg")
-        .attr("width", "100%")
-        .attr("height", "100%");
+            var tooltip = d3.select("#tooltip").style("position", "absolute").style("visibility", "hidden");
 
-    // Create a projection
-    var projection = d3.geoMercator()
-        .center([0, 0])
-        .scale(150)
-        .translate([svg.attr("width") / 2, svg.attr("height") / 2]);
+            /*var svg = d3.select("svg"),
+        width = +svg.attr("width"),
+        height = +svg.attr("height");*/
 
-    // Create a path generator
-    var path = d3.geoPath()
-        .projection(projection);
+            //==========================================================added===========================
+            const chuckSize = 100;
+            const delaySeconds = 2;
 
-    // Define the color scale
-    var colorScale = d3.scaleSequential(d3.interpolateBlues)
-        .domain([0, d3.max(jsonData, function(d) { return d.pm2_5; })]);
+            function loadFeatures(features, startIdx) {
+                if (startIdx >= features.length) {
+                    console.log("mapping is done!");
+                    return;
+                }
+                const endIdx = Math.min(startIdx + chuckSize, features.length);
+                const chunk = features.slice(startIdx, endIdx);
+                console.log("startIdx", startIdx, "endIdx", endIdx);
 
-    // Draw the map
-    svg.selectAll("path")
-        .data(jsonData)
-        .enter()
-        .append("path")
-        .attr("d", path)
-        .style("fill", function(d) { return colorScale(d.pm2_5); });
-    </script>
-    {% endblock %}
-</body>
+                var gfg = d3
+                    .geoMercator()
+                    .scale(width / 0.1 / Math.PI) //==uganda===
+                    //.scale(width / 1.2 / Math.PI)
+                    .rotate([90, 0])
+                    //.center([110, 0])
+                    //.center([120, 0])
+                    .center([122, 1])
+                    .translate([width / 2, height / 2]);
+
+                const path = d3.geoPath().projection(gfg);
+
+                var colorScale = d3.scaleThreshold().domain([0, 12, 35.5, 55.5, 150.5, 250.4]).range(["green", "yellow", "orange", "red", "purple", "maroon"]);
+
+                svg.append("g")
+                    .selectAll("path")
+                    .data(chunk)
+                    .enter()
+                    .append("path")
+                    .attr("d", path)
+                    //.attr("fill", "Turquoise")
+                    .attr("fill", function (d) {
+                        var pm = d.properties.pm2_5;
+                        return colorScale(pm);
+                    })
+
+                    .attr("stroke", "#ffff")
+                    .attr("stroke-width", 1)
+
+                    .on("mouseover", function (d) {
+                        d3.select(this).attr("fill", "black");
+
+                        //tooltip
+                        tooltip.style("visibility", "visible").text(d.properties.name + " " + d.properties.pm2_5);
+                    })
+                    .on("mouseout", function (d) {
+                        d3.select(this)
+                            //.attr("fill", "Turquoise")
+                            .attr("fill", function (d) {
+                                var pm = d.properties.pm2_5;
+                                return colorScale(pm);
+                            })
+                            .style("stroke", "#ffff")
+                            .style("stroke-width", 1);
+                    });
+
+                setTimeout(function () {
+                    loadFeatures(features, endIdx);
+                }, delaySeconds * 1000);
+            }
+            //=========================================================================================
+
+            // Mercator projection
+            // Center(20, 20) and 90 degree rotation w.r.t Y axis
+
+            d3.json("/geo", function (data) {
+                console.log("in the map route now...");
+                //console.log(data.features);
+                loadFeatures(data.features, 0);
+            });
+            console.log("Getting data from route...");
+        </script>
+
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+    </body>
 </html>
