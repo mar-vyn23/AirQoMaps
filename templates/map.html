@@ -1,108 +1,270 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>AirQoMaps</title>
-        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous" />
-    </head>
 
-    <body>
-        <!-- <div class="border border-dark" style="width: 700px; height: 600px"> -->
-        <div class="border border-dark">
-            <svg width="700" height="600"></svg>
-        </div>
-        <div id="tooltip"></div>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AirQoMaps</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous" />
 
-        <script src="https://d3js.org/d3.v4.js"></script>
-        <script src="https://d3js.org/d3-geo-projection.v2.min.js"></script>
-        <script>
-            const width = innerWidth;
-            const height = innerHeight;
-            var svg = d3.select("svg").attr("width", width).attr("height", height);
+  <style>
+    #tooltip {
+      position: absolute;
+      visibility: hidden;
+      background-color: rgba(0, 0, 0, 0.8);
+      color: #fff;
+      padding: 5px;
+      border-radius: 5px;
+      font-size: 12px;
+      z-index: 9999;
+    }
 
-            var tooltip = d3.select("#tooltip").style("position", "absolute").style("visibility", "hidden");
+    .legend-container {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      border: black;
+    }
 
-            /*var svg = d3.select("svg"),
-        width = +svg.attr("width"),
-        height = +svg.attr("height");*/
+    .legend-title {
+      font-weight: bold;
+      margin-bottom: 5px;
+        align-self: center;
+    }
 
-            //==========================================================added===========================
-            const chuckSize = 100;
-            const delaySeconds = 2;
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+      cursor: pointer;
+        color: black;
+    }
 
-            function loadFeatures(features, startIdx) {
-                if (startIdx >= features.length) {
-                    console.log("mapping is done!");
-                    return;
-                }
-                const endIdx = Math.min(startIdx + chuckSize, features.length);
-                const chunk = features.slice(startIdx, endIdx);
-                console.log("startIdx", startIdx, "endIdx", endIdx);
+    .legend-color {
+      position: relative;
+      width: 75px;
+      height: 30px;
+      margin-right: 5px;
+      cursor: pointer;
+    }
 
-                var gfg = d3
-                    .geoMercator()
-                    .scale(width / 0.1 / Math.PI) //==uganda===
-                    //.scale(width / 1.2 / Math.PI)
-                    .rotate([90, 0])
-                    //.center([110, 0])
-                    //.center([120, 0])
-                    .center([122, 1])
-                    .translate([width / 2, height / 2]);
+    .legend-value {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+    }
 
-                const path = d3.geoPath().projection(gfg);
+    .legend-item:hover .legend-value {
+      opacity: 1;
+    }
+  </style>
+</head>
 
-                var colorScale = d3.scaleThreshold().domain([0, 12, 35.5, 55.5, 150.5, 250.4]).range(["green", "yellow", "orange", "red", "purple", "maroon"]);
+<body>
+  <div class="border border-dark">
+    <svg width="700" height="600"></svg>
+  </div>
 
-                svg.append("g")
-                    .selectAll("path")
-                    .data(chunk)
-                    .enter()
-                    .append("path")
-                    .attr("d", path)
-                    //.attr("fill", "Turquoise")
-                    .attr("fill", function (d) {
-                        var pm = d.properties.pm2_5;
-                        return colorScale(pm);
-                    })
+  <div class="legend-container">
+    <div class="legend-title">PM2.5 AQI</div>
 
-                    .attr("stroke", "#ffff")
-                    .attr("stroke-width", 1)
+    <div class="legend-item" data-bs-toggle="tooltip" data-bs-placement="top" title="Good">
+      <div class="legend-color" style="background-color: green;">
+        <span class="legend-value">0 - 12</span>
+      </div>
+    </div>
+    <div class="legend-item" data-bs-toggle="tooltip" data-bs-placement="top" title="Moderate">
+      <div class="legend-color" style="background-color: yellow;">
+        <span class="legend-value">12.1 - 35.4</span>
+      </div>
+    </div>
+    <div class="legend-item" data-bs-toggle="tooltip" data-bs-placement="top" title="Unhealthy for sensitive people">
+      <div class="legend-color" style="background-color: orange;">
+        <span class="legend-value">35.5 - 55.4</span>
+      </div>
+    </div>
+    <div class="legend-item" data-bs-toggle="tooltip" data-bs-placement="top" title="Unhealthy">
+      <div class="legend-color" style="background-color: red;">
+        <span class="legend-value">55.5 - 150.4</span>
+      </div>
+    </div>
+    <div class="legend-item" data-bs-toggle="tooltip" data-bs-placement="top" title="Very unhealthy">
+      <div class="legend-color" style="background-color: purple;">
+        <span class="legend-value">150.5 - 250.4</span>
+      </div>
+    </div>
+    <div class="legend-item" data-bs-toggle="tooltip" data-bs-placement="top" title="Harzardous">
+      <div class="legend-color" style="background-color: maroon;">
+        <span class="legend-value">250.5 - 500</span>
+      </div>
+    </div>
+  </div>
 
-                    .on("mouseover", function (d) {
-                        d3.select(this).attr("fill", "black");
+  <script src="https://d3js.org/d3.v4.js"></script>
+  <script src="https://d3js.org/d3-geo-projection.v2.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"
+    integrity="sha384-I78TRa5emw+9bCmioMBj6Y6AW2Rkxk0G0OCmCrxV0Z3EPk/SRfyu2yv2SkcR06Fy" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+    integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+      var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl)
+      })
+    })
 
-                        //tooltip
-                        tooltip.style("visibility", "visible").text(d.properties.name + " " + d.properties.pm2_5);
-                    })
-                    .on("mouseout", function (d) {
-                        d3.select(this)
-                            //.attr("fill", "Turquoise")
-                            .attr("fill", function (d) {
-                                var pm = d.properties.pm2_5;
-                                return colorScale(pm);
-                            })
-                            .style("stroke", "#ffff")
-                            .style("stroke-width", 1);
-                    });
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    var svg = d3.select("svg").attr("width", width).attr("height", height);
 
-                setTimeout(function () {
-                    loadFeatures(features, endIdx);
-                }, delaySeconds * 1000);
-            }
-            //=========================================================================================
+    // Append the tooltip element to the body
+    var tooltip = d3.select("body").append("div")
+      .attr("id", "tooltip")
+      .style("position", "absolute")
+      .style("visibility", "hidden")
+      .style("background-color", "rgba(0, 0, 0, 0.8)")
+      .style("color", "#fff")
+      .style("padding", "5px")
+      .style("border-radius", "5px")
+      .style("font-size", "12px");
 
-            // Mercator projection
-            // Center(20, 20) and 90 degree rotation w.r.t Y axis
+    const chuckSize = 100;
+    const delaySeconds = 2;
 
-            d3.json("/geo", function (data) {
-                console.log("in the map route now...");
-                //console.log(data.features);
-                loadFeatures(data.features, 0);
-            });
-            console.log("Getting data from route...");
-        </script>
+    function loadFeatures(features, startIdx) {
+      if (startIdx >= features.length) {
+        console.log("mapping is done!");
+        return;
+      }
+      const endIdx = Math.min(startIdx + chuckSize, features.length);
+      const chunk = features.slice(startIdx, endIdx);
+      console.log("startIdx", startIdx, "endIdx", endIdx);
 
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
-    </body>
+      var gfg = d3
+        .geoMercator()
+        .scale(width / 0.1 / Math.PI)
+        .rotate([90, 0])
+        .center([122, 1])
+        .translate([width / 2, height / 2]);
+
+      const path = d3.geoPath().projection(gfg);
+
+      var colorScale = d3.scaleThreshold().domain([0, 12, 35.5, 55.5, 150.5, 250.4]).range(["green", "yellow", "orange", "red", "purple", "maroon"]);
+
+      svg
+        .append("g")
+        .selectAll("path")
+        .data(chunk)
+        .enter()
+        .append("path")
+        .attr("d", path)
+        .attr("fill", function (d) {
+          var pm = d.properties.pm2_5;
+          return colorScale(pm);
+        })
+        .attr("stroke", "#ffff")
+        .attr("stroke-width", 1)
+        .on("mouseover", function (d) {
+          d3.select(this).attr("fill", "black");
+          tooltip
+            .style("visibility", "visible")
+            .style("left", (d3.event.pageX + 10) + "px")
+            .style("top", (d3.event.pageY - 10) + "px")
+            .html(`<strong>Parish:</strong> ${d.properties.parish}<br/><strong>PM2.5:</strong> ${d.properties.pm2_5}`);
+        })
+        .on("mouseout", function (d) {
+          d3.select(this)
+            .attr("fill", function (d) {
+              var pm = d.properties.pm2_5;
+              return colorScale(pm);
+            })
+            .style("stroke", "#ffff")
+            .style("stroke-width", 1);
+          tooltip.style("visibility", "hidden");
+        });
+
+      setTimeout(function () {
+        loadFeatures(features, endIdx);
+      }, delaySeconds * 1000);
+    }
+
+    d3.json("/geo", function (data) {
+      console.log("in the map route now...");
+      loadFeatures(data.features, 0);
+    });
+    console.log("Getting data from route...");
+
+    svg
+      .append("rect")
+      .attr("x", 10)
+      .attr("y", 10)
+      .attr("width", 30)
+      .attr("height", 30)
+      .attr("fill", "white")
+      .attr("stroke", "black")
+      .attr("cursor", "pointer")
+      .on("click", zoomIn);
+
+    svg
+      .append("text")
+      .attr("x", 25)
+      .attr("y", 28)
+      .attr("text-anchor", "middle")
+      .attr("font-size", "20px")
+      .text("+")
+      .attr("cursor", "pointer")
+      .on("click", zoomIn);
+
+    svg
+      .append("rect")
+      .attr("x", 50)
+      .attr("y", 10)
+      .attr("width", 30)
+      .attr("height", 30)
+      .attr("fill", "white")
+      .attr("stroke", "black")
+      .attr("cursor", "pointer")
+      .on("click", zoomOut);
+
+    svg
+      .append("text")
+      .attr("x", 65)
+      .attr("y", 28)
+      .attr("text-anchor", "middle")
+      .attr("font-size", "20px")
+      .text("-")
+      .attr("cursor", "pointer")
+      .on("click", zoomOut);
+
+    function zoomIn() {
+      svg.transition().call(zoom.scaleBy, 1.5);
+    }
+
+    function zoomOut() {
+      svg.transition().call(zoom.scaleBy, 0.5);
+    }
+
+    var zoom = d3
+      .zoom()
+      .scaleExtent([1, 8])
+      .on("zoom", function () {
+        svg.attr("transform", d3.event.transform);
+      });
+
+    svg.call(zoom);
+  </script>
+</body>
+
 </html>

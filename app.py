@@ -1,16 +1,14 @@
+import os
+import geojson
+import psycopg2
+import shapely.geometry as geometry
+import shapely.wkb as wkb
+from dotenv import load_dotenv
 from flask import Flask, jsonify
 from flask import render_template
-import psycopg2
-import os
-from dotenv import load_dotenv
-import shapely.wkb as wkb
-import shapely.geometry as geometry
-import geojson
-import time
 
 app = Flask(__name__)
 load_dotenv()
-app.template_folder = 'templates'
 
 
 @app.route('/')
@@ -33,32 +31,28 @@ def connect_to_db():
     except psycopg2.Error as e:
         print(f'Error establishing connection to db : {e}')
     else:
-        limit = 100
-        offset = 0
-        data = []
-        while True:
-            # get first 100 records
-            cursor = connection.cursor()
-            cursor.execute('SELECT parish,pm2_5,geometry FROM public."Prediction" OFFSET %s LIMIT %s', (offset, limit))
-            rows = cursor.fetchall()
-            for row in rows:
+        cursor = connection.cursor()
+        cursor.execute('SELECT parish,pm2_5,geometry FROM public."Prediction"')
+        rows = cursor.fetchall()
+        features = []
+        i = 0
+        for row in rows:
+            if i < 16863:
                 wkb_geometry = bytes.fromhex(row[2])
                 geometry_object = wkb.loads(wkb_geometry)
                 geometry_geojson = geometry.mapping(geometry_object)
                 properties = {
                     'parish': row[0],
-                    'pm2_5': row[1]
+                    'pm2_5': round(row[1], 2)
                 }
-                feature = geojson.Feature(geometry=geometry_geojson, properties=properties)
-                geo_json = geojson.dumps(feature)
-                # print(geo_json)
-                # print("\n\n")
-                data.append(geo_json)
-                time.sleep(10)
-            offset += limit
-            if len(rows) < limit:
-                break
-        return data
+                i = i + 1
+                feature = geojson.Feature(geometry=geometry_geojson,
+                                          properties=properties)
+                features.append(feature)
+        feature_collection = geojson.FeatureCollection(features)
+        cursor.close()
+        connection.close()
+        return jsonify(feature_collection)
 
 
 if __name__ == "__main__":
