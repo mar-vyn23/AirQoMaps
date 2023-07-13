@@ -155,13 +155,15 @@
       var gfg = d3
         .geoMercator()
         .scale(width / 0.1 / Math.PI)
+
         .rotate([90, 0])
         .center([122, 1])
         .translate([width / 2, height / 2]);
 
-      const path = d3.geoPath().projection(gfg);
-
-      var colorScale = d3.scaleThreshold().domain([0, 12, 35.5, 55.5, 150.5, 250.4]).range(["green", "yellow", "orange", "red", "purple", "maroon"]);
+      const path = d3.geoPath().projection(gfg);var customColors = ["green", "yellow", "orange", "red", "purple", "maroon"];
+      var colorScale = d3.scaleThreshold()
+          .domain([12.1, 35.5, 55.5, 150.5, 250.4,500])
+          .range(customColors);
 
       svg
         .append("g")
@@ -202,7 +204,8 @@
 
     d3.json("/geo", function (data) {
       console.log("in the map route now...");
-      loadFeatures(data.features, 0);
+      console.log(data.features)
+      //loadFeatures(data.features, 0);
     });
     console.log("Getting data from route...");
 
