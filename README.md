@@ -82,3 +82,6 @@ AirQoMaps utilizes various technologies and libraries to deliver its functionali
 
 We are grateful to the developers and maintainers of these tools for their invaluable contributions to the project.
 
+![AirQoMaps Screenshot](https://example.com/path/to/airqomaps-screenshot.png)
+
+
