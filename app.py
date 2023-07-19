@@ -39,7 +39,7 @@ offset = 0
 
 # Route to access geo data from the database
 @app.route('/geo')
-# @cache.cached(timeout=1800, key_prefix='geo_cache')  # Cache the response for 1800 seconds (1/2 an hour)
+@cache.cached(timeout=1800, key_prefix='geo_cache')  # Cache the response for 1800 seconds (1/2 an hour)
 def connect_to_db():
     try:
         connection = psycopg2.connect(**db_config)  # Connect to the PostgreSQL database
