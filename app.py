@@ -39,7 +39,7 @@ offset = 0
 
 # Route to access geo data from the database
 @app.route('/geo')
-@cache.cached(timeout=1800, key_prefix='geo_cache')  # Cache the response for 1800 seconds (1/2 an hour)
+# @cache.cached(timeout=1800, key_prefix='geo_cache')  # Cache the response for 1800 seconds (1/2 an hour)
 def connect_to_db():
     try:
         connection = psycopg2.connect(**db_config)  # Connect to the PostgreSQL database
@@ -65,7 +65,7 @@ def connect_to_db():
             # Increment the offset for the next chunk
             offset = offset + chunk_size
 
-            # Wait for 2 seconds before fetching another batch
+            # Wait for 1 second before fetching another batch
             time.sleep(1)
         else:
             # If no more rows to fetch, return an empty FeatureCollection

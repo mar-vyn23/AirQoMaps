@@ -11,10 +11,9 @@
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
       rel="stylesheet"
       integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM"
-      crossorigin="anonymous"
-    />
+      crossorigin="anonymous" />
 
-    <!-- Custom CSS styles for the map and legend -->
+    <!-- Additional CSS styles for the map container -->
     <style>
       /* CSS styles for the tooltip */
       #tooltip {
@@ -37,6 +36,10 @@
         flex-direction: column;
         align-items: flex-start;
         border: black;
+        /* Add additional styling to make the legend static */
+        background-color: white;
+        padding: 10px;
+        border-radius: 5px;
       }
 
       /* CSS styles for the legend title */
@@ -89,10 +92,21 @@
       }
 
       #map-container {
+        /* Adjust the padding to leave space for the legend */
+        padding-bottom: 100px;
         width: 100vw;
         height: 100vh;
         overflow: auto;
         position: relative;
+      }
+
+      /* Position the legend div */
+      #legend {
+        /* Adjust the position to place the legend where you want it */
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
+        z-index: 999;
       }
 
       #map {
@@ -106,15 +120,14 @@
       <svg id="map" width="100%" height="100%"></svg>
     </div>
 
-    <div class="legend-container">
+    <!-- Add a new div for the legend outside the map-container -->
+    <div id="legend" class="legend-container">
       <div class="legend-title">PM2.5 AQI</div>
-
       <div
         class="legend-item"
         data-bs-toggle="tooltip"
         data-bs-placement="top"
-        title="Good"
-      >
+        title="Good">
         <div class="legend-color" style="background-color: green">
           <span class="legend-value">0 - 12</span>
         </div>
@@ -123,8 +136,7 @@
         class="legend-item"
         data-bs-toggle="tooltip"
         data-bs-placement="top"
-        title="Moderate"
-      >
+        title="Moderate">
         <div class="legend-color" style="background-color: yellow">
           <span class="legend-value">12.1 - 35.4</span>
         </div>
@@ -133,8 +145,7 @@
         class="legend-item"
         data-bs-toggle="tooltip"
         data-bs-placement="top"
-        title="Unhealthy for sensitive people"
-      >
+        title="Unhealthy for sensitive people">
         <div class="legend-color" style="background-color: orange">
           <span class="legend-value">35.5 - 55.4</span>
         </div>
@@ -143,8 +154,7 @@
         class="legend-item"
         data-bs-toggle="tooltip"
         data-bs-placement="top"
-        title="Unhealthy"
-      >
+        title="Unhealthy">
         <div class="legend-color" style="background-color: red">
           <span class="legend-value">55.5 - 150.4</span>
         </div>
@@ -153,8 +163,7 @@
         class="legend-item"
         data-bs-toggle="tooltip"
         data-bs-placement="top"
-        title="Very unhealthy"
-      >
+        title="Very unhealthy">
         <div class="legend-color" style="background-color: purple">
           <span class="legend-value">150.5 - 250.4</span>
         </div>
@@ -163,8 +172,7 @@
         class="legend-item"
         data-bs-toggle="tooltip"
         data-bs-placement="top"
-        title="Harzardous"
-      >
+        title="Harzardous">
         <div class="legend-color" style="background-color: maroon">
           <span class="legend-value">250.5 - 500</span>
         </div>
@@ -177,59 +185,57 @@
     <script
       src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"
       integrity="sha384-I78TRa5emw+9bCmioMBj6Y6AW2Rkxk0G0OCmCrxV0Z3EPk/SRfyu2yv2SkcR06Fy"
-      crossorigin="anonymous"
-    ></script>
+      crossorigin="anonymous"></script>
     <script
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
       integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz"
-      crossorigin="anonymous"
-    ></script>
+      crossorigin="anonymous"></script>
+
+    <!-- Leaflet library -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 
     <script>
-      // Event listener for tooltip
-      document.addEventListener("DOMContentLoaded", function () {
-        var tooltipTriggerList = [].slice.call(
-          document.querySelectorAll('[data-bs-toggle="tooltip"]')
-        );
-        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-          return new bootstrap.Tooltip(tooltipTriggerEl);
-        });
-      });
+      // Function to handle the geolocation request
+      function getUserLocation(map) {
+        if ("geolocation" in navigator) {
+          navigator.geolocation.getCurrentPosition(
+            (position) => {
+              // Get user's latitude and longitude
+              const latitude = position.coords.latitude;
+              const longitude = position.coords.longitude;
 
-      // Width and height of the map SVG
-      const width = window.innerWidth;
-      const height = window.innerHeight;
+              // Update the map view to the user's location
+              map.setView([latitude, longitude], 7);
 
-      // Select the map SVG element
-      var svg = d3.select("#map").attr("width", width).attr("height", height);
+              // Fetch and render map data from the server
+              fetchAndRenderMap(0, map);
+            },
+            (error) => {
+              console.error("Error getting user's location:", error.message);
+            }
+          );
+        } else {
+          console.error("Geolocation is not available in this browser.");
+        }
+      }
 
-      // Create a tooltip element to display information on hover
-      var tooltip = d3
-        .select("body")
-        .append("div")
-        .attr("id", "tooltip")
-        .style("position", "absolute")
-        .style("visibility", "hidden")
-        .style("background-color", "rgba(0, 0, 0, 0.8)")
-        .style("color", "#fff")
-        .style("padding", "5px")
-        .style("border-radius", "5px")
-        .style("font-size", "12px");
+      // Initialize the map
+      var map = L.map("map-container").setView([0, 0], 7);
 
-      // Constants for data loading in chunks
-      const chuckSize = 50;
-      //const delaySeconds = 0.5;
+      // Load the OpenStreetMap tiles
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      }).addTo(map);
+      //fetchAndRenderMap(0, map);
 
-      // Function to load and render map features in chunks
-      function loadFeatures(features, startIdx) {
-        var gfg = d3
-          .geoMercator()
-          .scale(width / 0.1 / Math.PI)
-          .rotate([90, 0])
-          .center([122, 1])
-          .translate([width / 2, height / 2]);
+      // Center the map at the user's location and fetch data from the server
+      getUserLocation(map);
 
-        const path = d3.geoPath().projection(gfg);
+      function loadFeatures(features, map) {
         var customColors = [
           "green",
           "yellow",
@@ -238,138 +244,50 @@
           "purple",
           "maroon",
         ];
+
         var colorScale = d3
           .scaleThreshold()
           .domain([12.1, 35.5, 55.5, 150.5, 250.4, 500])
           .range(customColors);
 
-        svg
-          .append("g")
-          .selectAll("path")
-          .data(features)
-          .enter()
-          .append("path")
-          .attr("d", path)
-          //.attr("fill", "Turquoise")
-          .attr("fill", function (d) {
-            var pm = d.properties.pm2_5;
-            return colorScale(pm);
-          })
-          .attr("stroke", "#ffff")
-          .attr("stroke-width", 1)
+        features.forEach((feature) => {
+          var pm = feature.properties.pm2_5;
+          var color = colorScale(pm);
 
-          .on("mouseover", function (d) {
-            d3.select(this).attr("fill", "black");
-            tooltip
-              .style("visibility", "visible")
-              .style("left", d3.event.pageX + 10 + "px")
-              .style("top", d3.event.pageY - 10 + "px")
-              .html(
-                `<strong>Parish:</strong> ${d.properties.parish}<br/><strong>PM2.5:</strong> ${d.properties.pm2_5}`
-              );
-          })
-          .on("mouseout", function (d) {
-            d3.select(this)
-              //.attr("fill", "Turquoise")
-              .attr("fill", function (d) {
-                var pm = d.properties.pm2_5;
-                return colorScale(pm);
-              })
-              .style("stroke", "#ffff")
-              .style("stroke-width", 1);
+          /*
+          L.circle(
+            [feature.geometry.coordinates[1], feature.geometry.coordinates[0]],
+            {
+              color: color,
+              fillColor: color,
+              fillOpacity: 0.5,
+              radius: 1000, // You can adjust the radius as needed
+            }
+          ).addTo(map);*/
+          console.log('am here now -----------')
 
-            tooltip.style("visibility", "hidden");
-          });
+        });
         console.log("mapping is done!");
       }
 
-      /*d3.json("/geo", function (data) {
-      console.log("in the map route now...");
-      loadFeatures(data.features, 0);
-    });*/
-
-      // Zoom controls for the map
-      svg
-        .append("rect")
-        .attr("x", 10)
-        .attr("y", 10)
-        .attr("width", 30)
-        .attr("height", 30)
-        .attr("fill", "white")
-        .attr("stroke", "black")
-        .attr("cursor", "pointer")
-        .on("click", zoomIn);
-
-      svg
-        .append("text")
-        .attr("x", 25)
-        .attr("y", 28)
-        .attr("text-anchor", "middle")
-        .attr("font-size", "20px")
-        .text("+")
-        .attr("cursor", "pointer")
-        .on("click", zoomIn);
-
-      svg
-        .append("rect")
-        .attr("x", 50)
-        .attr("y", 10)
-        .attr("width", 30)
-        .attr("height", 30)
-        .attr("fill", "white")
-        .attr("stroke", "black")
-        .attr("cursor", "pointer")
-        .on("click", zoomOut);
-
-      svg
-        .append("text")
-        .attr("x", 65)
-        .attr("y", 28)
-        .attr("text-anchor", "middle")
-        .attr("font-size", "20px")
-        .text("-")
-        .attr("cursor", "pointer")
-        .on("click", zoomOut);
-
-      // Function to zoom in
-      function zoomIn() {
-        svg.transition().call(zoom.scaleBy, 1.5);
-      }
-
-      // Function to zoom out
-      function zoomOut() {
-        svg.transition().call(zoom.scaleBy, 0.5);
-      }
-
-      // Define the zoom behavior and attach it to the map
-      var zoom = d3
-        .zoom()
-        .scaleExtent([1, 8])
-        .on("zoom", function () {
-          svg.attr("transform", d3.event.transform);
-        });
-
-      svg.call(zoom);
 
       // Function to fetch and render map data in chunks
-      function fetchAndRenderMap(offset) {
+      function fetchAndRenderMap(offset, map) {
         d3.json(`/geo?offset=${offset}`, function (data) {
           console.log("Inside.. and plotting next");
           console.log(data.features);
 
-          loadFeatures(data.features, 0);
+          // Load and render map features
+          loadFeatures(data.features, map);
 
           if (data.features.length > 0) {
             const nextOffset = offset + data.features.length;
             console.log("nextOffset is ", nextOffset);
-            fetchAndRenderMap(nextOffset);
+            fetchAndRenderMap(nextOffset, map);
           }
         });
       }
 
-      // Start fetching and rendering map data from the server
-      fetchAndRenderMap(0);
-      console.log("Getting data from route...");
-    </script>
+          </script>
   </body>
 </html>
