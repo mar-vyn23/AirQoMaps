@@ -11,7 +11,8 @@
       href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
       rel="stylesheet"
       integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM"
-      crossorigin="anonymous" />
+      crossorigin="anonymous"
+    />
 
     <!-- Additional CSS styles for the map container -->
     <style>
@@ -127,7 +128,8 @@
         class="legend-item"
         data-bs-toggle="tooltip"
         data-bs-placement="top"
-        title="Good">
+        title="Good"
+      >
         <div class="legend-color" style="background-color: green">
           <span class="legend-value">0 - 12</span>
         </div>
@@ -136,7 +138,8 @@
         class="legend-item"
         data-bs-toggle="tooltip"
         data-bs-placement="top"
-        title="Moderate">
+        title="Moderate"
+      >
         <div class="legend-color" style="background-color: yellow">
           <span class="legend-value">12.1 - 35.4</span>
         </div>
@@ -145,7 +148,8 @@
         class="legend-item"
         data-bs-toggle="tooltip"
         data-bs-placement="top"
-        title="Unhealthy for sensitive people">
+        title="Unhealthy for sensitive people"
+      >
         <div class="legend-color" style="background-color: orange">
           <span class="legend-value">35.5 - 55.4</span>
         </div>
@@ -154,7 +158,8 @@
         class="legend-item"
         data-bs-toggle="tooltip"
         data-bs-placement="top"
-        title="Unhealthy">
+        title="Unhealthy"
+      >
         <div class="legend-color" style="background-color: red">
           <span class="legend-value">55.5 - 150.4</span>
         </div>
@@ -163,7 +168,8 @@
         class="legend-item"
         data-bs-toggle="tooltip"
         data-bs-placement="top"
-        title="Very unhealthy">
+        title="Very unhealthy"
+      >
         <div class="legend-color" style="background-color: purple">
           <span class="legend-value">150.5 - 250.4</span>
         </div>
@@ -172,7 +178,8 @@
         class="legend-item"
         data-bs-toggle="tooltip"
         data-bs-placement="top"
-        title="Harzardous">
+        title="Harzardous"
+      >
         <div class="legend-color" style="background-color: maroon">
           <span class="legend-value">250.5 - 500</span>
         </div>
@@ -185,16 +192,19 @@
     <script
       src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"
       integrity="sha384-I78TRa5emw+9bCmioMBj6Y6AW2Rkxk0G0OCmCrxV0Z3EPk/SRfyu2yv2SkcR06Fy"
-      crossorigin="anonymous"></script>
+      crossorigin="anonymous"
+    ></script>
     <script
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
       integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz"
-      crossorigin="anonymous"></script>
+      crossorigin="anonymous"
+    ></script>
 
     <!-- Leaflet library -->
     <link
       rel="stylesheet"
-      href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+      href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+    />
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
 
     <script>
@@ -250,26 +260,26 @@
           .domain([12.1, 35.5, 55.5, 150.5, 250.4, 500])
           .range(customColors);
 
-        features.forEach((feature) => {
-          var pm = feature.properties.pm2_5;
-          var color = colorScale(pm);
+        L.geoJSON(features, {
+          style: function (feature) {
+            var pm = feature.properties.pm2_5;
+            var color = colorScale(pm);
 
-          /*
-          L.circle(
-            [feature.geometry.coordinates[1], feature.geometry.coordinates[0]],
-            {
-              color: color,
+            return {
               fillColor: color,
               fillOpacity: 0.5,
-              radius: 1000, // You can adjust the radius as needed
-            }
-          ).addTo(map);*/
-          console.log('am here now -----------')
-
-        });
-        console.log("mapping is done!");
+              color: "black",
+              weight: 1,
+            };
+          },
+          onEachFeature: function (feature, layer) {
+            // You can add tooltip or popup information here if needed
+            layer.bindPopup(
+              `Parish: ${feature.properties.parish}\nPM2.5 AQI: ${feature.properties.pm2_5}`
+            );
+          },
+        }).addTo(map);
       }
-
 
       // Function to fetch and render map data in chunks
       function fetchAndRenderMap(offset, map) {
@@ -287,7 +297,6 @@
           }
         });
       }
-
-          </script>
+    </script>
   </body>
 </html>
