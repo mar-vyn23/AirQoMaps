@@ -87,5 +87,9 @@ We are grateful to the developers and maintainers of these tools for their inval
 ![AirQoMaps Screenshot](static/airqo_maps.png)
 ![AirQoMaps Screenshot](static/Maps.png)
 ![AirQoMaps Screenshot](static/progress.png)
+<video width="640" height="360" controls>
+    <source src="static/map.webm" type="video/webm">
+    Your browser does not support the video tag.
+</video>
 
 

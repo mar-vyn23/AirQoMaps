@@ -8,7 +8,7 @@ function getUserLocation(map, callback) {
                 const longitude = position.coords.longitude;
 
                 // Update the map view to the user's location
-                map.setView([latitude, longitude], 10);
+                map.setView([latitude, longitude], 9);
 
                 // Call the callback function with the user's location
                 callback(latitude, longitude);
@@ -23,7 +23,7 @@ function getUserLocation(map, callback) {
 }
 
 // Initialize the map
-var map = L.map("map-container").setView([0, 0], 10);
+var map = L.map("map-container").setView([0, 0], 9);
 
 // Load the OpenStreetMap tiles
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
