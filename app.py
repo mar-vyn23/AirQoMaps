@@ -61,7 +61,7 @@ def connect_to_db():
         user_latitude = float(request.args.get("latitude"))
         user_longitude = float(request.args.get("longitude"))
 
-        buffer = 1  # Buffer for defining map area bounds
+        buffer = 0.5935555555555555555555555555555555555555555555555555555  # Buffer for defining map area bounds
         min_lat = user_latitude - buffer
         max_lat = user_latitude + buffer
         min_lng = user_longitude - buffer
