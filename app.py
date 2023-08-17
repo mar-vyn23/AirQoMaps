@@ -61,7 +61,7 @@ def connect_to_db():
         user_latitude = float(request.args.get("latitude"))
         user_longitude = float(request.args.get("longitude"))
 
-        buffer = 0.5935555555555555555555555555555555555555555555555555555  # Buffer for defining map area bounds
+        buffer = 0.5955555555555555555555555555555555555555555555555555555  # Buffer for defining map area bounds
         min_lat = user_latitude - buffer
         max_lat = user_latitude + buffer
         min_lng = user_longitude - buffer
@@ -80,7 +80,7 @@ def connect_to_db():
         feature_collection = geojson.FeatureCollection(features)
 
         # Simulate a pause of 1 second to avoid overloading the database
-        time.sleep(0.1)
+        time.sleep(0.2)
         cursor.close()
         connection.close()
         return jsonify(feature_collection)  # Return the GeoJSON data as a JSON response
