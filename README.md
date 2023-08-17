@@ -18,8 +18,8 @@ Air pollution is a critical environmental issue affecting millions of people wor
 
 ## Features
 
-- **Dynamic Map Rendering:** AirQoMaps uses D3.js and D3-GeoProjection to generate interactive maps with colored polygons representing different parishes.
-- **Interactive Tooltips:** The application offers tooltips that provide additional information about each parish, including its name and the corresponding PM2.5 AQI level.
+- **Dynamic Map Rendering:** AirQoMaps uses D3.js and D3-GeoProjection to generate interactive maps with colored polygons representing different parishes. The map initially loads the parish where the user is located currently. When the user moves the map , other parishes are progressively loaded. The map leverages OpenStreetMaps API to plot the parishes and PM2.5 values on it.
+- **Interactive Tooltips:** The application offers tooltips that provide additional information about each parish, including its name and the corresponding PM2.5 AQI level. You just have to hover over any loaded area and the name of the parish and the corresponding PM2.5 value will be shown.
 - **Color-Coded Legend:** A color-coded legend accompanies the map, providing a clear visualization of PM2.5 AQI ranges. Each color represents a specific AQI level.
 - **Zoom Functionality:** Users can zoom in and out of the map to get a more detailed view of the air quality data.
 - **Caching Mechanism:** AirQoMaps implements Flask-Caching with Redis to enhance performance by caching responses.
@@ -48,6 +48,8 @@ Air pollution is a critical environmental issue affecting millions of people wor
 `DB_USER=your-database-username`
 
 `DB_PASSWORD=your-database-password`
+
+The dataset used can be downloaded here "https://drive.google.com/file/d/1auwMvMeqeUQ_8Im16k5tVT6NlHw4COXT/view?usp=drive_link" 
 
 
 4. Start the application:
@@ -83,5 +85,7 @@ AirQoMaps utilizes various technologies and libraries to deliver its functionali
 We are grateful to the developers and maintainers of these tools for their invaluable contributions to the project.
 
 ![AirQoMaps Screenshot](static/airqo_maps.png)
+![AirQoMaps Screenshot](static/Maps.png)
+![AirQoMaps Screenshot](static/progress.png)
 
 

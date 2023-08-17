@@ -1,326 +1,65 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <!-- Meta tags for character set and viewport -->
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>AirQoMaps</title>
+    <head>
+        <!-- Meta tags for character set and viewport -->
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>AirQoMaps</title>
 
-    <!-- External CSS stylesheet (Bootstrap) -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-      integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM"
-      crossorigin="anonymous"
-    />
+        <!-- External CSS stylesheet (Bootstrap) -->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous" />
+        <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
+    </head>
 
-    <!-- Additional CSS styles for the map container -->
-    <style>
-      /* CSS styles for the tooltip */
-      #tooltip {
-        position: absolute;
-        visibility: hidden;
-        background-color: rgba(0, 0, 0, 0.8);
-        color: #fff;
-        padding: 5px;
-        border-radius: 5px;
-        font-size: 12px;
-        z-index: 9999;
-      }
-
-      /* CSS styles for the legend container */
-      .legend-container {
-        position: absolute;
-        bottom: 20px;
-        left: 20px;
-        display: flex;
-        flex-direction: column;
-        align-items: flex-start;
-        border: black;
-        /* Add additional styling to make the legend static */
-        background-color: white;
-        padding: 10px;
-        border-radius: 5px;
-      }
-
-      /* CSS styles for the legend title */
-      .legend-title {
-        font-weight: bold;
-        margin-bottom: 5px;
-        align-self: center;
-      }
-
-      /* CSS styles for each legend item */
-      .legend-item {
-        display: flex;
-        align-items: center;
-        margin-bottom: 5px;
-        cursor: pointer;
-        color: black;
-      }
-
-      /* CSS styles for the colored boxes in the legend */
-      .legend-color {
-        position: relative;
-        width: 75px;
-        height: 30px;
-        margin-right: 5px;
-        cursor: pointer;
-      }
-
-      /* CSS styles for the legend values */
-      .legend-value {
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        color: white;
-        font-size: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        white-space: nowrap;
-      }
-
-      /* Additional CSS styles for the map container and SVG */
-      .legend-item:hover .legend-value {
-        opacity: 1;
-      }
-
-      body {
-        margin: 0;
-        overflow: hidden;
-      }
-
-      #map-container {
-        /* Adjust the padding to leave space for the legend */
-        padding-bottom: 100px;
-        width: 100vw;
-        height: 100vh;
-        overflow: auto;
-        position: relative;
-      }
-
-      /* Position the legend div */
-      #legend {
-        /* Adjust the position to place the legend where you want it */
-        position: absolute;
-        bottom: 20px;
-        left: 20px;
-        z-index: 999;
-      }
-
-      #map {
-        position: absolute;
-      }
-    </style>
-  </head>
-
-  <body>
-    <div id="map-container">
-      <svg id="map" width="100%" height="100%"></svg>
-    </div>
-
-    <!-- Add a new div for the legend outside the map-container -->
-    <div id="legend" class="legend-container">
-      <div class="legend-title">PM2.5 AQI</div>
-      <div
-        class="legend-item"
-        data-bs-toggle="tooltip"
-        data-bs-placement="top"
-        title="Good"
-      >
-        <div class="legend-color" style="background-color: green">
-          <span class="legend-value">0 - 12</span>
+    <body>
+        <div id="map-container">
+            <svg id="map" width="100%" height="100%"></svg>
         </div>
-      </div>
-      <div
-        class="legend-item"
-        data-bs-toggle="tooltip"
-        data-bs-placement="top"
-        title="Moderate"
-      >
-        <div class="legend-color" style="background-color: yellow">
-          <span class="legend-value">12.1 - 35.4</span>
+
+        <!-- Add a new div for the legend outside the map-container -->
+        <div id="legend" class="legend-container">
+            <div class="legend-title">PM2.5 AQI</div>
+            <div class="legend-item" data-bs-toggle="tooltip" data-bs-placement="top" title="Good">
+                <div class="legend-color" style="background-color: green;">
+                    <span class="legend-value">0 - 12</span>
+                </div>
+            </div>
+            <div class="legend-item" data-bs-toggle="tooltip" data-bs-placement="top" title="Moderate">
+                <div class="legend-color" style="background-color: yellow;">
+                    <span class="legend-value">12.1 - 35.4</span>
+                </div>
+            </div>
+            <div class="legend-item" data-bs-toggle="tooltip" data-bs-placement="top" title="Unhealthy for sensitive people">
+                <div class="legend-color" style="background-color: orange;">
+                    <span class="legend-value">35.5 - 55.4</span>
+                </div>
+            </div>
+            <div class="legend-item" data-bs-toggle="tooltip" data-bs-placement="top" title="Unhealthy">
+                <div class="legend-color" style="background-color: red;">
+                    <span class="legend-value">55.5 - 150.4</span>
+                </div>
+            </div>
+            <div class="legend-item" data-bs-toggle="tooltip" data-bs-placement="top" title="Very unhealthy">
+                <div class="legend-color" style="background-color: purple;">
+                    <span class="legend-value">150.5 - 250.4</span>
+                </div>
+            </div>
+            <div class="legend-item" data-bs-toggle="tooltip" data-bs-placement="top" title="Harzardous">
+                <div class="legend-color" style="background-color: maroon;">
+                    <span class="legend-value">250.5 - 500</span>
+                </div>
+            </div>
         </div>
-      </div>
-      <div
-        class="legend-item"
-        data-bs-toggle="tooltip"
-        data-bs-placement="top"
-        title="Unhealthy for sensitive people"
-      >
-        <div class="legend-color" style="background-color: orange">
-          <span class="legend-value">35.5 - 55.4</span>
-        </div>
-      </div>
-      <div
-        class="legend-item"
-        data-bs-toggle="tooltip"
-        data-bs-placement="top"
-        title="Unhealthy"
-      >
-        <div class="legend-color" style="background-color: red">
-          <span class="legend-value">55.5 - 150.4</span>
-        </div>
-      </div>
-      <div
-        class="legend-item"
-        data-bs-toggle="tooltip"
-        data-bs-placement="top"
-        title="Very unhealthy"
-      >
-        <div class="legend-color" style="background-color: purple">
-          <span class="legend-value">150.5 - 250.4</span>
-        </div>
-      </div>
-      <div
-        class="legend-item"
-        data-bs-toggle="tooltip"
-        data-bs-placement="top"
-        title="Harzardous"
-      >
-        <div class="legend-color" style="background-color: maroon">
-          <span class="legend-value">250.5 - 500</span>
-        </div>
-      </div>
-    </div>
 
-    <!-- JavaScript libraries for map and tooltip interactions -->
-    <script src="https://d3js.org/d3.v4.js"></script>
-    <script src="https://d3js.org/d3-geo-projection.v2.min.js"></script>
-    <script
-      src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"
-      integrity="sha384-I78TRa5emw+9bCmioMBj6Y6AW2Rkxk0G0OCmCrxV0Z3EPk/SRfyu2yv2SkcR06Fy"
-      crossorigin="anonymous"
-    ></script>
-    <script
-      src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
-      integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz"
-      crossorigin="anonymous"
-    ></script>
+        <!-- JavaScript libraries for map and tooltip interactions -->
+        <script src="https://d3js.org/d3.v4.js"></script>
+        <script src="https://d3js.org/d3-geo-projection.v2.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js" integrity="sha384-I78TRa5emw+9bCmioMBj6Y6AW2Rkxk0G0OCmCrxV0Z3EPk/SRfyu2yv2SkcR06Fy" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
 
-    <!-- Leaflet library -->
-    <link
-      rel="stylesheet"
-      href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
-    />
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-
-    <script>
-      // Function to handle the geolocation request
-      function getUserLocation(map, callback) {
-        if ("geolocation" in navigator) {
-          navigator.geolocation.getCurrentPosition(
-            (position) => {
-              // Get user's latitude and longitude
-              const latitude = position.coords.latitude;
-              const longitude = position.coords.longitude;
-
-              // Update the map view to the user's location
-              map.setView([latitude, longitude], 12);
-
-              // Call the callback function with the user's location
-              callback(latitude, longitude);
-            },
-            (error) => {
-              console.error("Error getting user's location:", error.message);
-            }
-          );
-        } else {
-          console.error("Geolocation is not available in this browser.");
-        }
-      }
-
-      // Initialize the map
-      var map = L.map("map-container").setView([0, 0], 12);
-
-      // Load the OpenStreetMap tiles
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-      }).addTo(map);
-      //fetchAndRenderMap(0, map);
-
-      // Fetch and render map data from the server based on user's location
-      getUserLocation(map, function (latitude, longitude) {
-        fetchAndRenderMap(latitude, longitude, map);
-      });
-
-      // Attach an event listener for map movements
-      map.on("moveend", function () {
-        const center = map.getCenter();
-        const bounds = {
-          latitude: center.lat,
-          longitude: center.lng,
-        };
-        fetchAndRenderMap(bounds.latitude, bounds.longitude, map);
-      });
-
-      // Center the map at the user's location and fetch data from the server
-      getUserLocation(map);
-
-      function loadFeatures(features, map) {
-        var customColors = [
-          "green",
-          "yellow",
-          "orange",
-          "red",
-          "purple",
-          "maroon",
-        ];
-
-        var colorScale = d3
-          .scaleThreshold()
-          .domain([12.1, 35.5, 55.5, 150.5, 250.4, 500])
-          .range(customColors);
-
-        L.geoJSON(features, {
-          style: function (feature) {
-            var pm = feature.properties.pm2_5;
-            var color = colorScale(pm);
-
-            return {
-              fillColor: color,
-              fillOpacity: 0.5,
-              color: "black",
-              weight: 1,
-            };
-          },
-          onEachFeature: function (feature, layer) {
-            layer.bindPopup(
-              `Parish: ${feature.properties.parish}\nPM2.5 AQI: ${feature.properties.pm2_5}`
-            );
-
-            layer.on({
-              mouseover: function (e) {
-                var layer = e.target;
-                layer.openPopup();
-              },
-              mouseout: function (e) {
-                var layer = e.target;
-                layer.closePopup();
-              },
-            });
-          },
-        }).addTo(map);
-      }
-
-      // Function to fetch and render map data in chunks
-      function fetchAndRenderMap(latitude, longitude, map) {
-        // Make a fetch request to the /geo endpoint with latitude and longitude parameters
-        fetch(`/geo?latitude=${latitude}&longitude=${longitude}`)
-          .then((response) => response.json())
-          .then((data) => {
-            // Call the loadFeatures function to render the fetched data on the map
-            // console.log('latitude now is', latitude, "and longitude is", longitude)
-            // console.log(data.features, " for ", latitude, "and",longitude)
-            loadFeatures(data.features, map);
-          })
-          .catch((error) => {
-            console.error("Error fetching map data:", error);
-          });
-      }
-    </script>
-  </body>
+        <!-- Leaflet library -->
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+        <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+        <script src="{{ url_for('static', filename='js/frontend_logic.js') }}"></script>
+    </body>
 </html>

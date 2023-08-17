@@ -39,7 +39,6 @@ offset = 0
 
 # Route to access geo data from the database
 @app.route('/geo')
-# @cache.cached(timeout=1800, key_prefix='geo_cache')  # Cache the response for 1800 seconds (1/2 an hour)
 def connect_to_db():
     try:
         connection = psycopg2.connect(**db_config)  # Connect to the PostgreSQL database
@@ -47,38 +46,30 @@ def connect_to_db():
         print(f'Error establishing connection to db : {e}')
     else:
         global offset
-        # print(f'Offset is now {offset} instead of 0')
-        chunk_size = 100
-        offset = 0
-        # print(f'Offset has now been set to {offset}')
+        chunk_size = 100  # Number of records to fetch in a single query
+        offset = 0  # Initialize offset for pagination
         cursor = connection.cursor()
 
         # Get user's latitude and longitude from query parameters
         user_latitude = float(request.args.get('latitude'))
         user_longitude = float(request.args.get('longitude'))
 
-        # Get the bounds of the visible map area (adjust buffer as needed)
-        buffer = 1  # Adjust this value as needed for the buffer
+        buffer = 1  # Buffer for defining map area bounds
         min_lat = user_latitude - buffer
         max_lat = user_latitude + buffer
         min_lng = user_longitude - buffer
         max_lng = user_longitude + buffer
 
-        # Fetch parishes within the visible map area from the database
-        cursor.execute(f'SELECT parish, pm2_5, geometry FROM public."Prediction" WHERE ST_Within(geometry, ST_MakeEnvelope(%s, %s, %s, %s, 4326)) LIMIT {chunk_size} OFFSET {offset}',
-                       (min_lng, min_lat, max_lng, max_lat))
+        # Fetch parishes within the visible map area from the database using spatial query
+        query = f'SELECT parish, pm2_5, geometry FROM public."Prediction" WHERE ST_Within(geometry, ST_MakeEnvelope(%s, %s, %s, %s, 4326)) LIMIT {chunk_size} OFFSET {offset}'
+        cursor.execute(query, (min_lng, min_lat, max_lng, max_lat))
         rows = cursor.fetchall()
-        # print(f"rows for {min_lat}, {max_lat} fetched")
 
         # Convert each row to GeoJSON feature using the 'to_geojson' function and build a FeatureCollection
         features = [to_geojson(row[0], round(row[1]), row[2], id=i + offset) for i, row in enumerate(rows)]
         feature_collection = geojson.FeatureCollection(features)
-        # print(f"feature collection for {min_lat}, {max_lat}, {min_lng}, {max_lng} are {len(feature_collection)}")
 
-        # Increment the offset for the next chunk
-        # offset = offset + chunk_size
-
-        # Wait for 1 second before fetching another batch
+        # Simulate a pause of 1 second to avoid overloading the database
         time.sleep(1)
         cursor.close()
         connection.close()
